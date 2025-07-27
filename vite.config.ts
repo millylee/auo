@@ -15,7 +15,6 @@ export default defineConfig({
         cli: resolve(__dirname, 'src/cli/index.ts'),
         config: resolve(__dirname, 'src/config/index.ts'),
         utils: resolve(__dirname, 'src/utils/index.ts'),
-        postinstall: resolve(__dirname, 'scripts/postinstall.ts'),
       },
       formats: ['es', 'cjs'],
       fileName: (format, entryName) => {
