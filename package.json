@@ -34,7 +34,6 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\" \"tests/**/*.{ts,tsx,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,json,md}\" \"tests/**/*.{ts,tsx,json}\"",
     "clean": "rimraf dist coverage",
-
     "prepublishOnly": "pnpm run clean && pnpm run build && pnpm run test",
     "prepare": "husky"
   },
@@ -43,7 +42,14 @@
     "pnpm": ">=9.0.0"
   },
   "packageManager": "pnpm@9.15.0",
-  "keywords": ["claude", "claude code", "cli", "wrapper", "anthropic", "typescript"],
+  "keywords": [
+    "claude",
+    "claude code",
+    "cli",
+    "wrapper",
+    "anthropic",
+    "typescript"
+  ],
   "author": "Milly Lee",
   "license": "MIT",
   "devDependencies": {
@@ -54,12 +60,12 @@
     "@vitest/ui": "^3.2.4",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
     "husky": "^9.1.7",
     "lint-staged": "^15.3.0",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.2",
+    "typescript-eslint": "^8.38.0",
     "vite": "^7.0.5",
     "vitest": "^3.2.4"
   }

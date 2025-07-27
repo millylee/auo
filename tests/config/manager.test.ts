@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { ConfigManager } from '../../src/config/manager';
-import type { ConfigItem } from '../../src/types';
+import type { ConfigItem as _ConfigItem } from '../../src/types';
 
 describe('ConfigManager', () => {
   let configManager: ConfigManager;
@@ -31,7 +31,7 @@ describe('ConfigManager', () => {
 
     it('should use custom configuration options', () => {
       const customDir = path.join(os.tmpdir(), `auo-custom-${Date.now()}`);
-      const customManager = new ConfigManager({
+      const _customManager = new ConfigManager({
         configDir: customDir,
         configFileName: 'custom-config.json',
       });
@@ -86,10 +86,8 @@ describe('ConfigManager', () => {
       // Write config with invalid currentIndex
       const configPath = path.join(tempDir, 'config.json');
       const invalidConfig = {
-        providers: [
-          { name: 'test', baseUrl: '', authToken: 'token', description: 'test' }
-        ],
-        currentIndex: 999 // Invalid index
+        providers: [{ name: 'test', baseUrl: '', authToken: 'token', description: 'test' }],
+        currentIndex: 999, // Invalid index
       };
       fs.writeFileSync(configPath, JSON.stringify(invalidConfig));
 
@@ -119,7 +117,7 @@ describe('ConfigManager', () => {
       // Create a read-only directory to simulate save failure
       const readOnlyDir = path.join(os.tmpdir(), `auo-readonly-${Date.now()}`);
       fs.mkdirSync(readOnlyDir);
-      
+
       try {
         // On Windows, we simulate write failure
         const spy = vi.spyOn(fs, 'writeFileSync').mockImplementation(() => {
@@ -129,13 +127,13 @@ describe('ConfigManager', () => {
         const manager = new ConfigManager({
           configDir: readOnlyDir,
         });
-        
+
         const result = manager.addConfig({
           name: 'test',
           baseUrl: 'https://api.test.com',
           authToken: 'test-token',
         });
-        
+
         expect(result).toBe(false);
         spy.mockRestore();
       } finally {
@@ -200,10 +198,10 @@ describe('ConfigManager', () => {
       });
 
       expect(result).toBe(true);
-      
+
       const allConfigs = configManager.getAllConfigs();
       expect(allConfigs).toHaveLength(2); // default + new
-      expect(allConfigs.find(c => c.name === 'test-provider')).toBeDefined();
+      expect(allConfigs.find((c) => c.name === 'test-provider')).toBeDefined();
     });
 
     it('should reject duplicate configuration names', () => {
@@ -222,9 +220,9 @@ describe('ConfigManager', () => {
       });
 
       expect(result).toBe(false);
-      
+
       const allConfigs = configManager.getAllConfigs();
-      expect(allConfigs.filter(c => c.name === 'duplicate')).toHaveLength(1);
+      expect(allConfigs.filter((c) => c.name === 'duplicate')).toHaveLength(1);
     });
   });
 
@@ -242,7 +240,7 @@ describe('ConfigManager', () => {
       expect(result).toBe(true);
 
       const allConfigs = configManager.getAllConfigs();
-      expect(allConfigs.find(c => c.name === 'to-delete')).toBeUndefined();
+      expect(allConfigs.find((c) => c.name === 'to-delete')).toBeUndefined();
     });
 
     it('should adjust currentIndex when deleting current configuration', () => {

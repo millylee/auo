@@ -6,7 +6,7 @@ describe('CLI Command Parsing', () => {
   it('should correctly parse help parameters', () => {
     const result = parseArgs(['--help']);
     expect(result.help).toBe(true);
-    
+
     const result2 = parseArgs(['-h']);
     expect(result2.help).toBe(true);
   });
@@ -14,7 +14,7 @@ describe('CLI Command Parsing', () => {
   it('should correctly parse version parameters', () => {
     const result = parseArgs(['--version']);
     expect(result.version).toBe(true);
-    
+
     const result2 = parseArgs(['-v']);
     expect(result2.version).toBe(true);
   });
@@ -55,13 +55,13 @@ describe('CLI Commands', () => {
   describe('showHelp', () => {
     it('should display help information', () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      
+
       showHelp();
-      
+
       expect(consoleSpy).toHaveBeenCalled();
       expect(consoleSpy.mock.calls[0][0]).toContain('auo');
       expect(consoleSpy.mock.calls[0][0]).toContain('Usage');
-      
+
       consoleSpy.mockRestore();
     });
   });

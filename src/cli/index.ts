@@ -10,7 +10,7 @@ import { checkClaudeCode, installClaudeCode } from '../utils/claude';
 async function ensureClaudeCode(): Promise<void> {
   try {
     const hasClaudeCode = await checkClaudeCode();
-    
+
     if (hasClaudeCode) {
       // Claude Code is already available, proceed silently
       return;
@@ -19,15 +19,15 @@ async function ensureClaudeCode(): Promise<void> {
     // Claude Code not found, attempt automatic installation
     console.log('🔍 First time use detected, checking Claude Code installation...');
     console.log('📦 Claude Code not found, installing automatically...');
-    
+
     try {
       await installClaudeCode();
-      
+
       // Verify installation was successful
       const isInstalled = await checkClaudeCode();
       if (isInstalled) {
         console.log('✅ Claude Code installed successfully!');
-        console.log('🎉 You\'re ready to use auo!');
+        console.log("🎉 You're ready to use auo!");
       } else {
         console.warn('⚠️  Claude Code installation may have issues');
         console.log('💡 Manual installation: npm install -g @anthropic-ai/claude-code');
@@ -49,7 +49,7 @@ async function ensureClaudeCode(): Promise<void> {
     if (checkError instanceof Error) {
       console.log(`   Error: ${checkError.message}`);
     }
-    console.log('💡 This won\'t prevent auo from running, installation will be retried if needed');
+    console.log("💡 This won't prevent auo from running, installation will be retried if needed");
   }
 }
 
@@ -73,7 +73,7 @@ export async function main(): Promise<void> {
   try {
     // Lazy initialization - check Claude Code only when CLI is used
     await ensureClaudeCode();
-    
+
     await handleCLI(args);
   } catch (error) {
     if (error instanceof Error) {
@@ -88,7 +88,11 @@ export async function main(): Promise<void> {
 // If this file is run directly, execute main function
 // Support both CommonJS and ESM environments
 const isMainModule = typeof require !== 'undefined' && require.main === module;
-const isESMMain = typeof import.meta !== 'undefined' && import.meta.url && process.argv[1] && import.meta.url.includes(process.argv[1]);
+const isESMMain =
+  typeof import.meta !== 'undefined' &&
+  import.meta.url &&
+  process.argv[1] &&
+  import.meta.url.includes(process.argv[1]);
 
 if (isMainModule || isESMMain) {
   main().catch((error) => {
