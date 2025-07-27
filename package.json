@@ -34,7 +34,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\" \"tests/**/*.{ts,tsx,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,json,md}\" \"tests/**/*.{ts,tsx,json}\"",
     "clean": "rimraf dist coverage",
-    "postinstall": "node dist/postinstall.cjs",
+
     "prepublishOnly": "pnpm run clean && pnpm run build && pnpm run test",
     "prepare": "husky"
   },

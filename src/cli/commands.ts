@@ -1,6 +1,6 @@
 import readline from 'readline';
 import { ConfigManager } from '../config/manager';
-import { checkClaudeCode, installClaudeCode, runClaudeCode } from '../utils/claude';
+import { runClaudeCode } from '../utils/claude';
 import type { CLIOptions, EnvironmentVariables, ConfigItem } from '../types';
 
 // Declare global variables that will be replaced by Vite during build
@@ -211,13 +211,6 @@ export async function handleCLI(args: string[]): Promise<void> {
   }
 
   try {
-    // If Claude Code is not installed, install it automatically
-    const hasClaudeCode = await checkClaudeCode();
-    if (!hasClaudeCode) {
-      console.log('⚠️  Claude Code is not installed. Installing for the first use...');
-      await installClaudeCode();
-    }
-
     // Show current configuration info (only in non-silent mode)
     const currentConfig = configManager.getCurrentConfig();
     showCurrentConfig(currentConfig);
