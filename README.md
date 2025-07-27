@@ -3,7 +3,7 @@
 [![CI/CD](https://github.com/millylee/auo/actions/workflows/ci.yml/badge.svg)](https://github.com/millylee/auo/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/millylee/auo/branch/main/graph/badge.svg)](https://codecov.io/gh/millylee/auo)
 [![npm version](https://badge.fury.io/js/auo.svg)](https://badge.fury.io/js/auo)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: BSD 2-Clause](https://img.shields.io/badge/License-BSD%202--Clause-blue.svg)](https://opensource.org/license/bsd-2-clause)
 
 用于增强 Claude Code 的配置管理和使用体验。
 
