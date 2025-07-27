@@ -50,16 +50,12 @@ export async function checkClaudeCode(): Promise<boolean> {
  */
 export async function installClaudeCode(): Promise<void> {
   console.log('🔄 Installing Claude Code, please wait...');
-  
+
   return new Promise((resolve, reject) => {
-    const install: ChildProcess = spawn(
-      'npm', 
-      ['install', '-g', '@anthropic-ai/claude-code'], 
-      {
-        stdio: 'inherit',
-        shell: true,
-      }
-    );
+    const install: ChildProcess = spawn('npm', ['install', '-g', '@anthropic-ai/claude-code'], {
+      stdio: 'inherit',
+      shell: true,
+    });
 
     install.on('close', (code: number | null) => {
       if (code === 0) {
@@ -83,7 +79,7 @@ export async function installClaudeCode(): Promise<void> {
  */
 export function runClaudeCode(args: string[], env: NodeJS.ProcessEnv = {}): void {
   const mergedEnv = { ...process.env, ...env };
-  
+
   const claude: ChildProcess = spawn('claude', args, {
     stdio: 'inherit',
     shell: true,

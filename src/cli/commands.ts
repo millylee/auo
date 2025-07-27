@@ -13,7 +13,7 @@ declare const __PKG_DESCRIPTION__: string;
  */
 export function parseArgs(args: string[]): CLIOptions {
   const options: CLIOptions = {};
-  
+
   for (const arg of args) {
     switch (arg) {
       case '--help':
@@ -38,7 +38,7 @@ export function parseArgs(args: string[]): CLIOptions {
         break;
     }
   }
-  
+
   return options;
 }
 
@@ -85,13 +85,12 @@ Examples:
 /**
  * Handle configuration-related commands
  */
-export function handleConfigCommands(
-  options: CLIOptions,
-  configManager: ConfigManager
-): boolean {
+export function handleConfigCommands(options: CLIOptions, configManager: ConfigManager): boolean {
   if (options.next) {
     const newConfig = configManager.switchToNext();
-    console.log(`✅ Switched to config: ${newConfig.name} - ${newConfig.description || 'No description'}`);
+    console.log(
+      `✅ Switched to config: ${newConfig.name} - ${newConfig.description || 'No description'}`
+    );
     console.log(`   Base URL: ${newConfig.baseUrl || '(not set)'}`);
     console.log(`   Token: ${newConfig.authToken ? 'set' : 'not set'}`);
     return true;
@@ -106,7 +105,9 @@ export function handleConfigCommands(
       configs.forEach((cfg, idx) => {
         const currentConfig = configManager.getCurrentConfig();
         const current = cfg === currentConfig ? ' (current)' : '';
-        console.log(`  [${idx}] ${cfg.name}${cfg.description ? ` - ${cfg.description}` : ''}${current}`);
+        console.log(
+          `  [${idx}] ${cfg.name}${cfg.description ? ` - ${cfg.description}` : ''}${current}`
+        );
       });
     }
     return true;
@@ -183,7 +184,9 @@ export function setupEnvironment(config: ConfigItem): EnvironmentVariables {
  */
 export function showCurrentConfig(config: ConfigItem): void {
   if (config.name !== 'default' || config.baseUrl || config.authToken) {
-    console.log(`🔧 Current config: ${config.name}${config.description ? ` - ${config.description}` : ''}`);
+    console.log(
+      `🔧 Current config: ${config.name}${config.description ? ` - ${config.description}` : ''}`
+    );
   }
 }
 
@@ -214,7 +217,7 @@ export async function handleCLI(args: string[]): Promise<void> {
     // Show current configuration info (only in non-silent mode)
     const currentConfig = configManager.getCurrentConfig();
     showCurrentConfig(currentConfig);
-    
+
     // Set environment variables and run Claude Code
     const env = setupEnvironment(currentConfig);
     runClaudeCode(args, env);
@@ -224,7 +227,9 @@ export async function handleCLI(args: string[]): Promise<void> {
     } else {
       console.error('❌ Error:', String(error));
     }
-    console.error('🔧 If the problem persists, please check your network connection or contact support.');
+    console.error(
+      '🔧 If the problem persists, please check your network connection or contact support.'
+    );
     process.exit(1);
   }
 }

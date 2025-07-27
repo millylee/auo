@@ -1,12 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import type {
-  ConfigItem,
-  ConfigFile,
-  ConfigManagerOptions,
-  AddConfigParams,
-} from './types';
+import type { ConfigItem, ConfigFile, ConfigManagerOptions, AddConfigParams } from './types';
 
 /**
  * Configuration manager class
@@ -18,10 +13,7 @@ export class ConfigManager {
 
   constructor(options: ConfigManagerOptions = {}) {
     this.configDir = options.configDir || path.join(os.homedir(), '.auo');
-    this.configFile = path.join(
-      this.configDir,
-      options.configFileName || 'config.json'
-    );
+    this.configFile = path.join(this.configDir, options.configFileName || 'config.json');
     this.ensureConfigDir();
   }
 
@@ -59,25 +51,27 @@ export class ConfigManager {
       if (fs.existsSync(this.configFile)) {
         const data = fs.readFileSync(this.configFile, 'utf8');
         const config = JSON.parse(data) as ConfigFile;
-        
+
         // Validate configuration file format
         if (!config.providers || !Array.isArray(config.providers)) {
           throw new Error('Invalid config format');
         }
-        
+
         // Ensure currentIndex is valid
-        if (typeof config.currentIndex !== 'number' || 
-            config.currentIndex < 0 || 
-            config.currentIndex >= config.providers.length) {
+        if (
+          typeof config.currentIndex !== 'number' ||
+          config.currentIndex < 0 ||
+          config.currentIndex >= config.providers.length
+        ) {
           config.currentIndex = 0;
         }
-        
+
         return config;
       }
     } catch (error) {
       console.warn('⚠️ Failed to read configuration file, using default config:', error);
     }
-    
+
     return this.getDefaultConfig();
   }
 
@@ -148,7 +142,7 @@ export class ConfigManager {
    */
   switchToIndex(index: number): ConfigItem | null {
     const config = this.loadConfig();
-    
+
     if (index < 0 || index >= config.providers.length) {
       return null;
     }
@@ -173,7 +167,7 @@ export class ConfigManager {
       const baseUrl = cfg.baseUrl || '(not set)';
       const authToken = cfg.authToken ? '✅' : '❌';
       const description = cfg.description ? ` - ${cfg.description}` : '';
-      
+
       console.log(`${marker} [${index}] ${cfg.name}${description}`);
       console.log(`      Base URL: ${baseUrl}`);
       console.log(`      Auth Token: ${authToken}`);
@@ -289,13 +283,14 @@ export class ConfigManager {
         console.error(`❌ Configuration "${name}" does not exist`);
         return false;
       }
-      
+
       // Merge updates, keeping existing values as defaults
-      config.providers[index] = { 
+      config.providers[index] = {
         name: updates.name || existingConfig.name,
         baseUrl: updates.baseUrl !== undefined ? updates.baseUrl : existingConfig.baseUrl,
         authToken: updates.authToken !== undefined ? updates.authToken : existingConfig.authToken,
-        description: updates.description !== undefined ? updates.description : existingConfig.description,
+        description:
+          updates.description !== undefined ? updates.description : existingConfig.description,
       };
 
       this.saveConfig(config);
@@ -313,7 +308,7 @@ export class ConfigManager {
   resetConfig(): void {
     const defaultConfig = this.getDefaultConfig();
     this.saveConfig(defaultConfig);
-    
+
     console.log('✅ Configuration reset to default values');
   }
 
