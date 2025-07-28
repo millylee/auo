@@ -33,8 +33,10 @@ export interface CLIOptions {
   help?: boolean;
   /** Show version information */
   version?: boolean;
-  /** Switch to the next configuration */
-  next?: boolean;
+  /** Use configuration at specified index */
+  useIndex?: number;
+  /** Remove configuration at specified index */
+  removeIndex?: number;
   /** List all configurations */
   listConfigs?: boolean;
   /** Show configuration file path */

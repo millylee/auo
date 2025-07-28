@@ -24,9 +24,24 @@ describe('CLI Command Parsing', () => {
     expect(result.listConfigs).toBe(true);
   });
 
-  it('should correctly parse next config parameter', () => {
-    const result = parseArgs(['--next']);
-    expect(result.next).toBe(true);
+  it('should correctly parse use config parameter with index', () => {
+    const result = parseArgs(['--use', '1']);
+    expect(result.useIndex).toBe(1);
+  });
+
+  it('should correctly parse remove config parameter with index', () => {
+    const result = parseArgs(['--remove', '2']);
+    expect(result.removeIndex).toBe(2);
+  });
+
+  it('should ignore invalid use index', () => {
+    const result = parseArgs(['--use', 'invalid']);
+    expect(result.useIndex).toBeUndefined();
+  });
+
+  it('should ignore missing use index', () => {
+    const result = parseArgs(['--use']);
+    expect(result.useIndex).toBeUndefined();
   });
 
   it('should correctly parse add config parameter', () => {
@@ -40,10 +55,30 @@ describe('CLI Command Parsing', () => {
   });
 
   it('should correctly parse multiple parameters', () => {
-    const result = parseArgs(['--help', '--next', '--list']);
+    const result = parseArgs(['--help', '--use', '1', '--list']);
     expect(result.help).toBe(true);
-    expect(result.next).toBe(true);
+    expect(result.useIndex).toBe(1);
     expect(result.listConfigs).toBe(true);
+  });
+
+  it('should correctly parse use config parameter with index', () => {
+    const result = parseArgs(['--use', '1']);
+    expect(result.useIndex).toBe(1);
+  });
+
+  it('should correctly parse remove config parameter with index', () => {
+    const result = parseArgs(['--remove', '2']);
+    expect(result.removeIndex).toBe(2);
+  });
+
+  it('should ignore invalid use index', () => {
+    const result = parseArgs(['--use', 'invalid']);
+    expect(result.useIndex).toBeUndefined();
+  });
+
+  it('should ignore missing use index', () => {
+    const result = parseArgs(['--use']);
+    expect(result.useIndex).toBeUndefined();
   });
 });
 
