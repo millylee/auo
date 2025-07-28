@@ -1,19 +1,46 @@
-# AUO - Claude Code Wrapper CLI
+# auo
 
 [![CI/CD](https://github.com/millylee/auo/actions/workflows/ci.yml/badge.svg)](https://github.com/millylee/auo/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/millylee/auo/branch/main/graph/badge.svg)](https://codecov.io/gh/millylee/auo)
 [![npm version](https://badge.fury.io/js/auo.svg)](https://badge.fury.io/js/auo)
 [![License: BSD 2-Clause](https://img.shields.io/badge/License-BSD%202--Clause-blue.svg)](https://opensource.org/license/bsd-2-clause)
 
-用于增强 Claude Code 的配置管理和使用体验。
+让 Claude Code 更易用，支持多配置切换。
 
-## 📋 前置要求
+## 前置要求
 
 - Node.js >= 18.0.0
 
+## 安装与使用
+
+> 首次使用时会自动判断 claude-code 是否已安装，未安装会先安装。
+
+```bash
+# 安装
+pnpm i -g auo
+
+# 列出所有配置
+auo --list
+
+# 切换到指定索引的配置
+auo --use 1
+
+# 删除指定索引的配置
+auo --remove 2
+
+# 添加新配置（交互式）
+auo --add
+
+# 查看配置文件路径
+auo --config-path
+
+# 正常使用 Claude，自动使用当前选中的配置中的 baseUrl 和 authToken
+auo "帮我写代码"
+```
+
 ## 配置示例
 
-可以手动编辑配置文件 `~/.auo/config.json`：
+可以手动编辑配置文件 `~/.auo/config.json`，但不推荐。
 
 ```json
 {
@@ -41,35 +68,7 @@
 }
 ```
 
-## 使用方法
-
-1. **列出所有配置**：
-   ```bash
-   auo --list
-   ```
-
-2. **切换到下一个配置**：
-   ```bash
-   auo --next
-   ```
-
-3. **添加新配置**（交互式）：
-   ```bash
-   auo --add
-   ```
-
-4. **查看配置文件路径**：
-   ```bash
-   auo --config-path
-   ```
-
-5. **正常使用 Claude**：
-   ```bash
-   auo "帮我写代码"
-   ```
-   会自动使用当前选中的配置中的 baseUrl 和 authToken
-
-## 🚀 快速开始
+## 开发指南
 
 ### 安装依赖
 
@@ -122,7 +121,7 @@ pnpm run build
 pnpm run clean
 ```
 
-## 📁 项目结构
+### 项目结构
 
 ```
 auo/
@@ -159,37 +158,7 @@ auo/
 └── package.json                 # 包配置
 ```
 
-## 🔧 开发指南
-
-### Git 工作流
-
-项目使用 Husky 和 lint-staged 来确保代码质量：
-
-- **pre-commit**: 自动运行 ESLint、Prettier 和相关测试
-- **commit-msg**: 可选的提交消息格式检查
-
-### 代码规范
-
-- 使用 ESLint 9 的扁平化配置
-- Prettier 进行代码格式化
-- 严格的 TypeScript 类型检查
-- 测试覆盖率要求 ≥ 80%
-
-### 测试策略
-
-- 单元测试：使用 Vitest
-- 覆盖率报告：使用 v8 provider
-- 测试环境：Node.js 环境
-- Mock 支持：自动重置和清理
-
-## 📦 构建和发布
-
-### 构建配置
-
-- **目标环境**: Node.js 18+
-- **输出格式**: ESM (`.mjs`) 和 CommonJS (`.cjs`)
-- **类型定义**: 自动生成 `.d.ts` 文件
-- **Source Maps**: 包含调试信息
+## 构建和发布
 
 ### 发布流程
 
@@ -197,7 +166,7 @@ auo/
 2. 推送标签：`git push --tags`
 3. GitHub Actions 自动构建和发布
 
-## 🤝 贡献指南
+## 贡献指南
 
 1. Fork 这个仓库
 2. 创建特性分支：`git checkout -b feature/amazing-feature`

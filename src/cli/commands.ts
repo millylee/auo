@@ -14,7 +14,9 @@ declare const __PKG_DESCRIPTION__: string;
 export function parseArgs(args: string[]): CLIOptions {
   const options: CLIOptions = {};
 
-  for (const arg of args) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
     switch (arg) {
       case '--help':
       case '-h':
@@ -24,9 +26,30 @@ export function parseArgs(args: string[]): CLIOptions {
       case '-v':
         options.version = true;
         break;
-      case '--next':
-        options.next = true;
+      case '--use': {
+        // Get the next argument as index
+        const useIndexStr = args[i + 1];
+        if (useIndexStr !== undefined && !useIndexStr.startsWith('--')) {
+          const useIndex = parseInt(useIndexStr, 10);
+          if (!isNaN(useIndex)) {
+            options.useIndex = useIndex;
+            i++; // Skip next argument as it's the index
+          }
+        }
         break;
+      }
+      case '--remove': {
+        // Get the next argument as index
+        const removeIndexStr = args[i + 1];
+        if (removeIndexStr !== undefined && !removeIndexStr.startsWith('--')) {
+          const removeIndex = parseInt(removeIndexStr, 10);
+          if (!isNaN(removeIndex)) {
+            options.removeIndex = removeIndex;
+            i++; // Skip next argument as it's the index
+          }
+        }
+        break;
+      }
       case '--list':
         options.listConfigs = true;
         break;
@@ -66,7 +89,8 @@ Basic Commands:
   auo --help, -h              # Show this help message
 
 Configuration Management:
-  auo --next                  # Switch to the next configuration
+  auo --use <index>           # Switch to configuration at specified index
+  auo --remove <index>        # Remove configuration at specified index
   auo --list                  # List all configurations
   auo --add                   # Add a new configuration (interactive)
   auo --config-path           # Show config file path
@@ -75,10 +99,12 @@ Notes:
   • Claude Code will be installed automatically on first use
   • Config file is stored at ~/.auo/config.json
   • Use config management to easily switch between different API endpoints and tokens
+  • Use --list to see configuration indices before using --use or --remove
 
 Examples:
   auo --add                   # Add a new API configuration
-  auo --next                  # Switch to the next configuration
+  auo --use 1                 # Switch to configuration at index 1
+  auo --remove 2              # Remove configuration at index 2
   auo "Write a React component" # Ask Claude with the current config`);
 }
 
@@ -86,13 +112,25 @@ Examples:
  * Handle configuration-related commands
  */
 export function handleConfigCommands(options: CLIOptions, configManager: ConfigManager): boolean {
-  if (options.next) {
-    const newConfig = configManager.switchToNext();
-    console.log(
-      `✅ Switched to config: ${newConfig.name} - ${newConfig.description || 'No description'}`
-    );
-    console.log(`   Base URL: ${newConfig.baseUrl || '(not set)'}`);
-    console.log(`   Token: ${newConfig.authToken ? 'set' : 'not set'}`);
+  if (options.useIndex !== undefined) {
+    const config = configManager.switchToIndex(options.useIndex);
+    if (config) {
+      console.log(
+        `✅ Switched to config [${options.useIndex}]: ${config.name} - ${config.description || 'No description'}`
+      );
+      console.log(`   Base URL: ${config.baseUrl || '(not set)'}`);
+      console.log(`   Token: ${config.authToken ? 'set' : 'not set'}`);
+    } else {
+      const allConfigs = configManager.getAllConfigs();
+      console.error(
+        `❌ Invalid index ${options.useIndex}. Must be between 0 and ${allConfigs.length - 1}`
+      );
+    }
+    return true;
+  }
+
+  if (options.removeIndex !== undefined) {
+    configManager.removeConfigByIndex(options.removeIndex);
     return true;
   }
 

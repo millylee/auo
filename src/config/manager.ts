@@ -121,23 +121,6 @@ export class ConfigManager {
   }
 
   /**
-   * Switch to next configuration
-   */
-  switchToNext(): ConfigItem {
-    const config = this.loadConfig();
-    const nextIndex = (config.currentIndex + 1) % config.providers.length;
-
-    config.currentIndex = nextIndex;
-    this.saveConfig(config);
-
-    const nextConfig = config.providers[nextIndex];
-    if (!nextConfig) {
-      throw new Error('Unable to get next configuration');
-    }
-    return nextConfig;
-  }
-
-  /**
    * Switch to configuration at specified index
    */
   switchToIndex(index: number): ConfigItem | null {
@@ -334,5 +317,49 @@ export class ConfigManager {
   getAllConfigs(): ConfigItem[] {
     const config = this.loadConfig();
     return [...config.providers];
+  }
+
+  /**
+   * Delete configuration by index
+   */
+  removeConfigByIndex(index: number): boolean {
+    try {
+      const config = this.loadConfig();
+
+      // Check index boundaries
+      if (index < 0 || index >= config.providers.length) {
+        console.error(
+          `❌ Invalid index ${index}. Must be between 0 and ${config.providers.length - 1}`
+        );
+        return false;
+      }
+
+      if (config.providers.length <= 1) {
+        console.error('❌ Cannot delete the last configuration');
+        return false;
+      }
+
+      const deletedConfig = config.providers[index];
+      if (!deletedConfig) {
+        console.error(`❌ Configuration at index ${index} not found`);
+        return false;
+      }
+
+      config.providers.splice(index, 1);
+
+      // Adjust current index if necessary
+      if (config.currentIndex >= config.providers.length) {
+        config.currentIndex = config.providers.length - 1;
+      } else if (config.currentIndex > index) {
+        config.currentIndex = config.currentIndex - 1;
+      }
+
+      this.saveConfig(config);
+      console.log(`✅ Configuration "${deletedConfig.name}" (index ${index}) deleted successfully`);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to delete configuration:', error);
+      return false;
+    }
   }
 }
