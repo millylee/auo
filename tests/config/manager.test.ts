@@ -153,8 +153,8 @@ describe('ConfigManager', () => {
     });
   });
 
-  describe('switchToNext', () => {
-    it('should switch to next configuration', () => {
+  describe('switchToIndex', () => {
+    it('should switch to configuration at specified index', () => {
       // Add another configuration
       configManager.addConfig({
         name: 'second',
@@ -163,17 +163,68 @@ describe('ConfigManager', () => {
         description: 'Second configuration',
       });
 
-      // Switch to next (should be 'second')
-      const nextConfig = configManager.switchToNext();
-      expect(nextConfig.name).toBe('second');
+      // Switch to index 1 (should be 'second')
+      const config = configManager.switchToIndex(1);
+      expect(config?.name).toBe('second');
 
       // Current config should now be 'second'
       const currentConfig = configManager.getCurrentConfig();
       expect(currentConfig.name).toBe('second');
     });
 
-    it('should cycle back to first configuration', () => {
-      // Add another configuration
+    it('should return null for invalid index', () => {
+      const result = configManager.switchToIndex(999);
+      expect(result).toBeNull();
+
+      const result2 = configManager.switchToIndex(-1);
+      expect(result2).toBeNull();
+    });
+
+    it('should not change current config when index is invalid', () => {
+      const originalConfig = configManager.getCurrentConfig();
+      configManager.switchToIndex(999);
+      const currentConfig = configManager.getCurrentConfig();
+      expect(currentConfig.name).toBe(originalConfig.name);
+    });
+  });
+
+  describe('removeConfigByIndex', () => {
+    it('should successfully remove configuration by index', () => {
+      // Add a configuration to remove
+      configManager.addConfig({
+        name: 'to-remove',
+        baseUrl: 'https://api.remove.com',
+        authToken: 'remove-token',
+        description: 'To be removed',
+      });
+
+      const result = configManager.removeConfigByIndex(1);
+      expect(result).toBe(true);
+
+      const allConfigs = configManager.getAllConfigs();
+      expect(allConfigs.find((c) => c.name === 'to-remove')).toBeUndefined();
+    });
+
+    it('should reject invalid indices', () => {
+      const result1 = configManager.removeConfigByIndex(-1);
+      expect(result1).toBe(false);
+
+      const result2 = configManager.removeConfigByIndex(999);
+      expect(result2).toBe(false);
+    });
+
+    it('should prevent removing the last configuration', () => {
+      // Only default config exists
+      const result = configManager.removeConfigByIndex(0);
+      expect(result).toBe(false);
+
+      // Config should still exist
+      const allConfigs = configManager.getAllConfigs();
+      expect(allConfigs.length).toBe(1);
+    });
+
+    it('should adjust currentIndex when removing current configuration', () => {
+      // Add configurations
       configManager.addConfig({
         name: 'second',
         baseUrl: 'https://api.second.com',
@@ -181,10 +232,17 @@ describe('ConfigManager', () => {
         description: 'Second configuration',
       });
 
-      // Switch to next twice (should cycle back to first)
-      configManager.switchToNext(); // Now at 'second'
-      const firstAgain = configManager.switchToNext(); // Should cycle back to 'default'
-      expect(firstAgain.name).toBe('default');
+      // Switch to second configuration (index 1)
+      configManager.switchToIndex(1);
+      expect(configManager.getCurrentConfig().name).toBe('second');
+
+      // Remove the current configuration
+      const result = configManager.removeConfigByIndex(1);
+      expect(result).toBe(true);
+
+      // Should now be back to default (index 0)
+      const currentConfig = configManager.getCurrentConfig();
+      expect(currentConfig.name).toBe('default');
     });
   });
 
@@ -253,7 +311,7 @@ describe('ConfigManager', () => {
       });
 
       // Switch to second configuration
-      configManager.switchToNext();
+      configManager.switchToIndex(1);
       expect(configManager.getCurrentConfig().name).toBe('second');
 
       // Delete the current configuration
