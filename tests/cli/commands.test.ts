@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { parseArgs, showHelp, setupEnvironment } from '../../src/cli/commands';
-import type { ConfigItem } from '../../src/types';
+import type { ConfigItemV2 } from '../../src/types';
 
 describe('CLI Command Parsing', () => {
   it('should correctly parse help parameters', () => {
@@ -103,59 +103,89 @@ describe('CLI Commands', () => {
 
   describe('setupEnvironment', () => {
     it('should correctly set environment variables', () => {
-      const config: ConfigItem = {
+      const config: ConfigItemV2 = {
         name: 'test',
-        baseUrl: 'https://api.example.com',
-        authToken: 'test-token',
         description: 'Test configuration',
+        env: {
+          ANTHROPIC_BASE_URL: 'https://api.example.com',
+          ANTHROPIC_AUTH_TOKEN: 'test-token',
+          ANTHROPIC_MODEL: 'claude-3-5-sonnet-20241022',
+        },
       };
 
       const env = setupEnvironment(config);
 
       expect(env.ANTHROPIC_BASE_URL).toBe('https://api.example.com');
       expect(env.ANTHROPIC_AUTH_TOKEN).toBe('test-token');
+      expect(env.ANTHROPIC_MODEL).toBe('claude-3-5-sonnet-20241022');
     });
 
     it('should handle empty baseUrl', () => {
-      const config: ConfigItem = {
+      const config: ConfigItemV2 = {
         name: 'test',
-        baseUrl: '',
-        authToken: 'test-token',
         description: 'Test configuration',
+        env: {
+          ANTHROPIC_BASE_URL: undefined,
+          ANTHROPIC_AUTH_TOKEN: 'test-token',
+          ANTHROPIC_MODEL: undefined,
+        },
       };
 
       const env = setupEnvironment(config);
 
       expect(env.ANTHROPIC_BASE_URL).toBeUndefined();
       expect(env.ANTHROPIC_AUTH_TOKEN).toBe('test-token');
+      expect(env.ANTHROPIC_MODEL).toBeUndefined();
     });
 
     it('should handle empty authToken', () => {
-      const config: ConfigItem = {
+      const config: ConfigItemV2 = {
         name: 'test',
-        baseUrl: 'https://api.example.com',
-        authToken: '',
         description: 'Test configuration',
+        env: {
+          ANTHROPIC_BASE_URL: 'https://api.example.com',
+          ANTHROPIC_AUTH_TOKEN: undefined,
+          ANTHROPIC_MODEL: undefined,
+        },
       };
 
       const env = setupEnvironment(config);
 
       expect(env.ANTHROPIC_BASE_URL).toBe('https://api.example.com');
       expect(env.ANTHROPIC_AUTH_TOKEN).toBeUndefined();
+      expect(env.ANTHROPIC_MODEL).toBeUndefined();
     });
 
     it('should handle completely empty configuration', () => {
-      const config: ConfigItem = {
+      const config: ConfigItemV2 = {
         name: 'test',
-        baseUrl: '',
-        authToken: '',
         description: 'Test configuration',
+        env: {
+          ANTHROPIC_BASE_URL: undefined,
+          ANTHROPIC_AUTH_TOKEN: undefined,
+          ANTHROPIC_MODEL: undefined,
+        },
       };
 
       const env = setupEnvironment(config);
 
       expect(env.ANTHROPIC_BASE_URL).toBeUndefined();
       expect(env.ANTHROPIC_AUTH_TOKEN).toBeUndefined();
+      expect(env.ANTHROPIC_MODEL).toBeUndefined();
+    });
+
+    it('should handle missing env object', () => {
+      const config: ConfigItemV2 = {
+        name: 'test',
+        description: 'Test configuration',
+        env: undefined as any, // Simulate malformed config
+      };
+
+      const env = setupEnvironment(config);
+
+      expect(env.ANTHROPIC_BASE_URL).toBeUndefined();
+      expect(env.ANTHROPIC_AUTH_TOKEN).toBeUndefined();
+      expect(env.ANTHROPIC_MODEL).toBeUndefined();
     });
   });
 });

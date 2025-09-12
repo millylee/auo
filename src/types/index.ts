@@ -53,6 +53,8 @@ export interface EnvironmentVariables {
   ANTHROPIC_BASE_URL?: string;
   /** Anthropic authentication token */
   ANTHROPIC_AUTH_TOKEN?: string;
+  /** Anthropic model to use */
+  ANTHROPIC_MODEL?: string;
   [key: string]: string | undefined;
 }
 

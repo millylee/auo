@@ -148,3 +148,6 @@ storybook-static
 
 # Local Chromium instances
 .chromium/
+.claude
+CLAUDE.md
+.cursor

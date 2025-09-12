@@ -1,7 +1,7 @@
 import readline from 'readline';
 import { ConfigManager } from '../config/manager';
 import { runClaudeCode } from '../utils/claude';
-import type { CLIOptions, EnvironmentVariables, ConfigItem } from '../types';
+import type { CLIOptions, EnvironmentVariables, ConfigItemV2, AddConfigParamsV2 } from '../types';
 
 // Declare global variables that will be replaced by Vite during build
 declare const __PKG_NAME__: string;
@@ -118,8 +118,9 @@ export function handleConfigCommands(options: CLIOptions, configManager: ConfigM
       console.log(
         `✅ Switched to config [${options.useIndex}]: ${config.name} - ${config.description || 'No description'}`
       );
-      console.log(`   Base URL: ${config.baseUrl || '(not set)'}`);
-      console.log(`   Token: ${config.authToken ? 'set' : 'not set'}`);
+      console.log(`   Base URL: ${config.env.ANTHROPIC_BASE_URL || '(not set)'}`);
+      console.log(`   Token: ${config.env.ANTHROPIC_AUTH_TOKEN ? 'set' : 'not set'}`);
+      console.log(`   Model: ${config.env.ANTHROPIC_MODEL || 'default'}`);
     } else {
       const allConfigs = configManager.getAllConfigs();
       console.error(
@@ -165,7 +166,7 @@ export function handleConfigCommands(options: CLIOptions, configManager: ConfigM
 }
 
 /**
- * Interactive prompt to add a new configuration
+ * Interactive prompt to add a new configuration (v2 format)
  */
 export function addConfigInteractive(configManager: ConfigManager): void {
   const rl = readline.createInterface({
@@ -180,21 +181,28 @@ export function addConfigInteractive(configManager: ConfigManager): void {
       return;
     }
 
-    rl.question('Base URL (leave blank for default): ', (baseUrl) => {
-      rl.question('Auth Token: ', (authToken) => {
-        rl.question('Description (optional): ', (description) => {
-          const success = configManager.addConfig({
-            name: name.trim(),
-            baseUrl: baseUrl.trim(),
-            authToken: authToken.trim(),
-            description: description.trim(),
+    rl.question('Description (optional): ', (description) => {
+      rl.question('Base URL (leave blank for default): ', (baseUrl) => {
+        rl.question('Auth Token: ', (authToken) => {
+          rl.question('Model (optional, e.g., claude-3-5-sonnet-20241022): ', (model) => {
+            const configParams: AddConfigParamsV2 = {
+              name: name.trim(),
+              description: description.trim(),
+              env: {
+                ANTHROPIC_BASE_URL: baseUrl.trim() || undefined,
+                ANTHROPIC_AUTH_TOKEN: authToken.trim(),
+                ANTHROPIC_MODEL: model.trim() || undefined,
+              },
+            };
+
+            const success = configManager.addConfig(configParams);
+
+            if (success) {
+              console.log(`✅ Config "${name}" added successfully!`);
+            }
+
+            rl.close();
           });
-
-          if (success) {
-            console.log(`✅ Config "${name}" added successfully!`);
-          }
-
-          rl.close();
         });
       });
     });
@@ -202,29 +210,46 @@ export function addConfigInteractive(configManager: ConfigManager): void {
 }
 
 /**
- * Set environment variables based on configuration
+ * Set environment variables based on configuration (v2 format)
  */
-export function setupEnvironment(config: ConfigItem): EnvironmentVariables {
+export function setupEnvironment(config: ConfigItemV2): EnvironmentVariables {
   const env: EnvironmentVariables = {};
 
-  if (config.baseUrl) {
-    env.ANTHROPIC_BASE_URL = config.baseUrl;
+  // Ensure config.env exists before accessing its properties
+  if (!config.env) {
+    return env;
   }
-  if (config.authToken) {
-    env.ANTHROPIC_AUTH_TOKEN = config.authToken;
+
+  // Set environment variables from config.env
+  if (config.env.ANTHROPIC_BASE_URL) {
+    env.ANTHROPIC_BASE_URL = config.env.ANTHROPIC_BASE_URL;
+  }
+  if (config.env.ANTHROPIC_AUTH_TOKEN) {
+    env.ANTHROPIC_AUTH_TOKEN = config.env.ANTHROPIC_AUTH_TOKEN;
+  }
+  if (config.env.ANTHROPIC_MODEL) {
+    env.ANTHROPIC_MODEL = config.env.ANTHROPIC_MODEL;
   }
 
   return env;
 }
 
 /**
- * Show current configuration information
+ * Show current configuration information (v2 format)
  */
-export function showCurrentConfig(config: ConfigItem): void {
-  if (config.name !== 'default' || config.baseUrl || config.authToken) {
+export function showCurrentConfig(config: ConfigItemV2): void {
+  if (
+    config.name !== 'default' ||
+    config.env.ANTHROPIC_BASE_URL ||
+    config.env.ANTHROPIC_AUTH_TOKEN ||
+    config.env.ANTHROPIC_MODEL
+  ) {
     console.log(
       `🔧 Current config: ${config.name}${config.description ? ` - ${config.description}` : ''}`
     );
+
+    const model = config.env.ANTHROPIC_MODEL || 'default';
+    console.log(`   Using model: ${model}`);
   }
 }
 

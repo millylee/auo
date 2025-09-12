@@ -1,7 +1,31 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import type { ConfigItem, ConfigFile, ConfigManagerOptions, AddConfigParams } from './types';
+import type {
+  ConfigFile,
+  ConfigFileV2,
+  ConfigItemV2,
+  ConfigManagerOptions,
+  AddConfigParams,
+  AddConfigParamsV2,
+  ConfigEnvironment,
+  MigrationResult,
+} from './types';
+import { ConfigMigration } from './migration';
+
+/**
+ * Type guard to check if config file is v2
+ */
+function isConfigFileV2(config: ConfigFile): config is ConfigFileV2 {
+  return 'version' in config && config.version === 'v2';
+}
+
+/**
+ * Type guard to check if add config params is v2
+ */
+function isAddConfigParamsV2(params: AddConfigParams): params is AddConfigParamsV2 {
+  return 'env' in params;
+}
 
 /**
  * Configuration manager class
@@ -27,46 +51,53 @@ export class ConfigManager {
   }
 
   /**
-   * Get default configuration
+   * Get default configuration (v2 format)
    */
-  private getDefaultConfig(): ConfigFile {
-    return {
-      providers: [
-        {
-          name: 'default',
-          baseUrl: '',
-          authToken: '',
-          description: 'Default configuration',
-        },
-      ],
-      currentIndex: 0,
-    };
+  private getDefaultConfig(): ConfigFileV2 {
+    return ConfigMigration.getDefaultV2Config();
   }
 
   /**
-   * Load configuration file
+   * Load configuration file with automatic migration
    */
-  private loadConfig(): ConfigFile {
+  private loadConfig(): ConfigFileV2 {
     try {
       if (fs.existsSync(this.configFile)) {
         const data = fs.readFileSync(this.configFile, 'utf8');
-        const config = JSON.parse(data) as ConfigFile;
+        const rawConfig = JSON.parse(data) as ConfigFile;
 
-        // Validate configuration file format
-        if (!config.providers || !Array.isArray(config.providers)) {
-          throw new Error('Invalid config format');
+        // Check if migration is needed
+        if (ConfigMigration.needsMigration(rawConfig)) {
+          console.log('🔄 Migrating configuration to latest format...');
+          const { config: migratedConfig, result } = ConfigMigration.migrate(rawConfig);
+
+          // Save migrated configuration
+          this.saveConfig(migratedConfig);
+
+          if (result.migrated) {
+            console.log(
+              `✅ Configuration migrated from ${result.fromVersion} to ${result.toVersion}`
+            );
+          }
+
+          return migratedConfig;
         }
 
-        // Ensure currentIndex is valid
-        if (
-          typeof config.currentIndex !== 'number' ||
-          config.currentIndex < 0 ||
-          config.currentIndex >= config.providers.length
-        ) {
-          config.currentIndex = 0;
+        // Validate v2 configuration
+        if (isConfigFileV2(rawConfig)) {
+          if (ConfigMigration.validateV2Config(rawConfig)) {
+            // Ensure currentIndex is valid
+            if (
+              rawConfig.currentIndex < 0 ||
+              rawConfig.currentIndex >= rawConfig.providers.length
+            ) {
+              rawConfig.currentIndex = 0;
+            }
+            return rawConfig;
+          } else {
+            console.warn('⚠️ Invalid v2 configuration format detected, using default config');
+          }
         }
-
-        return config;
       }
     } catch (error) {
       console.warn('⚠️ Failed to read configuration file, using default config:', error);
@@ -76,9 +107,9 @@ export class ConfigManager {
   }
 
   /**
-   * Save configuration file
+   * Save configuration file (always saves as v2 format)
    */
-  private saveConfig(config: ConfigFile): void {
+  private saveConfig(config: ConfigFileV2): void {
     try {
       const data = JSON.stringify(config, null, 2);
       fs.writeFileSync(this.configFile, data, 'utf8');
@@ -97,7 +128,7 @@ export class ConfigManager {
   /**
    * Get current configuration
    */
-  getCurrentConfig(): ConfigItem {
+  getCurrentConfig(): ConfigItemV2 {
     const config = this.loadConfig();
     const currentIndex = config.currentIndex;
 
@@ -123,7 +154,7 @@ export class ConfigManager {
   /**
    * Switch to configuration at specified index
    */
-  switchToIndex(index: number): ConfigItem | null {
+  switchToIndex(index: number): ConfigItemV2 | null {
     const config = this.loadConfig();
 
     if (index < 0 || index >= config.providers.length) {
@@ -147,18 +178,20 @@ export class ConfigManager {
     config.providers.forEach((cfg, index) => {
       const isCurrent = index === currentIndex;
       const marker = isCurrent ? '👉' : '  ';
-      const baseUrl = cfg.baseUrl || '(not set)';
-      const authToken = cfg.authToken ? '✅' : '❌';
+      const baseUrl = cfg.env.ANTHROPIC_BASE_URL || '(not set)';
+      const authToken = cfg.env.ANTHROPIC_AUTH_TOKEN ? '✅' : '❌';
+      const model = cfg.env.ANTHROPIC_MODEL || 'default';
       const description = cfg.description ? ` - ${cfg.description}` : '';
 
       console.log(`${marker} [${index}] ${cfg.name}${description}`);
       console.log(`      Base URL: ${baseUrl}`);
       console.log(`      Auth Token: ${authToken}`);
+      console.log(`      Model: ${model}`);
     });
   }
 
   /**
-   * Add new configuration
+   * Add new configuration (v2 format)
    */
   addConfig(params: AddConfigParams): boolean {
     try {
@@ -170,34 +203,51 @@ export class ConfigManager {
         return false;
       }
 
-      if (!params.authToken || !params.authToken.trim()) {
-        console.error('❌ Auth Token cannot be empty');
-        return false;
-      }
-
-      // Format parameters
-      const formattedParams = {
-        name: params.name.trim(),
-        baseUrl: params.baseUrl?.trim() || '',
-        authToken: params.authToken.trim(),
-        description: params.description?.trim() || '',
-      };
-
       // Check if name already exists
       if (config.providers.some((cfg) => cfg.name === params.name)) {
         console.error(`❌ Configuration name "${params.name}" already exists`);
         return false;
       }
 
-      config.providers.push({
-        name: formattedParams.name,
-        baseUrl: formattedParams.baseUrl,
-        authToken: formattedParams.authToken,
-        description: formattedParams.description,
-      });
+      let newProvider: ConfigItemV2;
 
+      if (isAddConfigParamsV2(params)) {
+        // V2 format parameters
+        if (!params.env.ANTHROPIC_AUTH_TOKEN || !params.env.ANTHROPIC_AUTH_TOKEN.trim()) {
+          console.error('❌ Auth Token cannot be empty');
+          return false;
+        }
+
+        newProvider = {
+          name: params.name.trim(),
+          description: params.description?.trim() || '',
+          env: {
+            ANTHROPIC_BASE_URL: params.env.ANTHROPIC_BASE_URL?.trim() || undefined,
+            ANTHROPIC_AUTH_TOKEN: params.env.ANTHROPIC_AUTH_TOKEN.trim(),
+            ANTHROPIC_MODEL: params.env.ANTHROPIC_MODEL?.trim() || 'default',
+          },
+        };
+      } else {
+        // V1 format parameters - convert to V2
+        if (!params.authToken || !params.authToken.trim()) {
+          console.error('❌ Auth Token cannot be empty');
+          return false;
+        }
+
+        newProvider = {
+          name: params.name.trim(),
+          description: params.description?.trim() || '',
+          env: {
+            ANTHROPIC_BASE_URL: params.baseUrl?.trim() || undefined,
+            ANTHROPIC_AUTH_TOKEN: params.authToken.trim(),
+            ANTHROPIC_MODEL: 'default',
+          },
+        };
+      }
+
+      config.providers.push(newProvider);
       this.saveConfig(config);
-      console.log(`✅ Configuration "${formattedParams.name}" added successfully`);
+      console.log(`✅ Configuration "${newProvider.name}" added successfully`);
       return true;
     } catch (error) {
       console.error('❌ Failed to add configuration:', error);
@@ -243,7 +293,7 @@ export class ConfigManager {
   /**
    * Update configuration
    */
-  updateConfig(name: string, updates: Partial<ConfigItem>): boolean {
+  updateConfig(name: string, updates: Partial<ConfigItemV2>): boolean {
     try {
       const config = this.loadConfig();
       const index = config.providers.findIndex((cfg) => cfg.name === name);
@@ -270,10 +320,22 @@ export class ConfigManager {
       // Merge updates, keeping existing values as defaults
       config.providers[index] = {
         name: updates.name || existingConfig.name,
-        baseUrl: updates.baseUrl !== undefined ? updates.baseUrl : existingConfig.baseUrl,
-        authToken: updates.authToken !== undefined ? updates.authToken : existingConfig.authToken,
         description:
           updates.description !== undefined ? updates.description : existingConfig.description,
+        env: {
+          ANTHROPIC_BASE_URL:
+            updates.env?.ANTHROPIC_BASE_URL !== undefined
+              ? updates.env.ANTHROPIC_BASE_URL
+              : existingConfig.env.ANTHROPIC_BASE_URL,
+          ANTHROPIC_AUTH_TOKEN:
+            updates.env?.ANTHROPIC_AUTH_TOKEN !== undefined
+              ? updates.env.ANTHROPIC_AUTH_TOKEN
+              : existingConfig.env.ANTHROPIC_AUTH_TOKEN,
+          ANTHROPIC_MODEL:
+            updates.env?.ANTHROPIC_MODEL !== undefined
+              ? updates.env.ANTHROPIC_MODEL
+              : existingConfig.env.ANTHROPIC_MODEL,
+        },
       };
 
       this.saveConfig(config);
@@ -306,7 +368,7 @@ export class ConfigManager {
   /**
    * Get configuration by name
    */
-  getConfig(name: string): ConfigItem | null {
+  getConfig(name: string): ConfigItemV2 | null {
     const config = this.loadConfig();
     return config.providers.find((cfg) => cfg.name === name) || null;
   }
@@ -314,7 +376,7 @@ export class ConfigManager {
   /**
    * Get all configurations
    */
-  getAllConfigs(): ConfigItem[] {
+  getAllConfigs(): ConfigItemV2[] {
     const config = this.loadConfig();
     return [...config.providers];
   }
@@ -360,6 +422,52 @@ export class ConfigManager {
     } catch (error) {
       console.error('❌ Failed to delete configuration:', error);
       return false;
+    }
+  }
+
+  /**
+   * Get configuration environment variables
+   */
+  getConfigEnvironment(config?: ConfigItemV2): ConfigEnvironment {
+    const targetConfig = config || this.getCurrentConfig();
+    return { ...targetConfig.env };
+  }
+
+  /**
+   * Force migration of existing configuration
+   */
+  forceMigration(): MigrationResult {
+    try {
+      if (fs.existsSync(this.configFile)) {
+        const data = fs.readFileSync(this.configFile, 'utf8');
+        const rawConfig = JSON.parse(data) as ConfigFile;
+
+        const { config: migratedConfig, result } = ConfigMigration.migrate(rawConfig);
+
+        if (result.migrated) {
+          this.saveConfig(migratedConfig);
+          console.log(
+            `✅ Configuration migrated from ${result.fromVersion} to ${result.toVersion}`
+          );
+        } else {
+          console.log('ℹ️  Configuration is already up to date');
+        }
+
+        return result;
+      } else {
+        // No config file exists, create default
+        const defaultConfig = this.getDefaultConfig();
+        this.saveConfig(defaultConfig);
+
+        return {
+          migrated: true,
+          fromVersion: 'none',
+          toVersion: 'v2',
+        };
+      }
+    } catch (error) {
+      console.error('❌ Failed to perform migration:', error);
+      throw error;
     }
   }
 }
