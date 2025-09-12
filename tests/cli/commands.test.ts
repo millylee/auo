@@ -54,6 +54,21 @@ describe('CLI Command Parsing', () => {
     expect(result.configPath).toBe(true);
   });
 
+  it('should correctly parse edit config parameter with index', () => {
+    const result = parseArgs(['--edit', '3']);
+    expect(result.editIndex).toBe(3);
+  });
+
+  it('should ignore invalid edit index', () => {
+    const result = parseArgs(['--edit', 'invalid']);
+    expect(result.editIndex).toBeUndefined();
+  });
+
+  it('should ignore missing edit index', () => {
+    const result = parseArgs(['--edit']);
+    expect(result.editIndex).toBeUndefined();
+  });
+
   it('should correctly parse multiple parameters', () => {
     const result = parseArgs(['--help', '--use', '1', '--list']);
     expect(result.help).toBe(true);

@@ -59,6 +59,18 @@ export function parseArgs(args: string[]): CLIOptions {
       case '--add':
         options.addConfig = true;
         break;
+      case '--edit': {
+        // Get the next argument as index
+        const editIndexStr = args[i + 1];
+        if (editIndexStr !== undefined && !editIndexStr.startsWith('--')) {
+          const editIndex = parseInt(editIndexStr, 10);
+          if (!isNaN(editIndex)) {
+            options.editIndex = editIndex;
+            i++; // Skip next argument as it's the index
+          }
+        }
+        break;
+      }
     }
   }
 
@@ -91,6 +103,7 @@ Basic Commands:
 Configuration Management:
   auo --use <index>           # Switch to configuration at specified index
   auo --remove <index>        # Remove configuration at specified index
+  auo --edit <index>          # Edit configuration at specified index
   auo --list                  # List all configurations
   auo --add                   # Add a new configuration (interactive)
   auo --config-path           # Show config file path
@@ -104,6 +117,7 @@ Notes:
 Examples:
   auo --add                   # Add a new API configuration
   auo --use 1                 # Switch to configuration at index 1
+  auo --edit 1                # Edit configuration at index 1
   auo --remove 2              # Remove configuration at index 2
   auo "Write a React component" # Ask Claude with the current config`);
 }
@@ -162,6 +176,11 @@ export function handleConfigCommands(options: CLIOptions, configManager: ConfigM
     return true;
   }
 
+  if (options.editIndex !== undefined) {
+    editConfigInteractive(configManager, options.editIndex);
+    return true;
+  }
+
   return false;
 }
 
@@ -205,6 +224,112 @@ export function addConfigInteractive(configManager: ConfigManager): void {
           });
         });
       });
+    });
+  });
+}
+
+/**
+ * Interactive prompt to edit an existing configuration (v2 format)
+ */
+export function editConfigInteractive(configManager: ConfigManager, index: number): void {
+  const allConfigs = configManager.getAllConfigs();
+
+  // Validate index
+  if (index < 0 || index >= allConfigs.length) {
+    console.error(`❌ Invalid index ${index}. Must be between 0 and ${allConfigs.length - 1}`);
+    return;
+  }
+
+  const currentConfig = allConfigs[index];
+  if (!currentConfig) {
+    console.error(`❌ Configuration at index ${index} not found`);
+    return;
+  }
+
+  console.log(
+    `📝 Editing configuration [${index}]: ${currentConfig.name}${
+      currentConfig.description ? ` - ${currentConfig.description}` : ''
+    }`
+  );
+  console.log('💡 Leave blank to keep current value');
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  rl.question(`Config name (${currentConfig.name}): `, (name) => {
+    rl.question(`Description (${currentConfig.description || 'none'}): `, (description) => {
+      rl.question(
+        `Base URL (${currentConfig.env.ANTHROPIC_BASE_URL || 'not set'}): `,
+        (baseUrl) => {
+          rl.question(
+            `Auth Token (${currentConfig.env.ANTHROPIC_AUTH_TOKEN ? 'set' : 'not set'}): `,
+            (authToken) => {
+              rl.question(
+                `Model (${currentConfig.env.ANTHROPIC_MODEL || 'default'}): `,
+                (model) => {
+                  const oldName = currentConfig.name;
+
+                  // Build updates object - only include changed values
+                  const updates: Partial<ConfigItemV2> = {};
+
+                  if (name.trim() && name.trim() !== currentConfig.name) {
+                    updates.name = name.trim();
+                  }
+
+                  if (description.trim() !== currentConfig.description) {
+                    updates.description = description.trim();
+                  }
+
+                  // Handle environment variables
+                  const envUpdates: Partial<typeof currentConfig.env> = {};
+                  let hasEnvUpdates = false;
+
+                  if (baseUrl.trim() !== (currentConfig.env.ANTHROPIC_BASE_URL || '')) {
+                    envUpdates.ANTHROPIC_BASE_URL = baseUrl.trim() || undefined;
+                    hasEnvUpdates = true;
+                  }
+
+                  if (
+                    authToken.trim() &&
+                    authToken.trim() !== currentConfig.env.ANTHROPIC_AUTH_TOKEN
+                  ) {
+                    envUpdates.ANTHROPIC_AUTH_TOKEN = authToken.trim();
+                    hasEnvUpdates = true;
+                  }
+
+                  if (model.trim() !== (currentConfig.env.ANTHROPIC_MODEL || 'default')) {
+                    envUpdates.ANTHROPIC_MODEL = model.trim() || 'default';
+                    hasEnvUpdates = true;
+                  }
+
+                  if (hasEnvUpdates) {
+                    updates.env = envUpdates;
+                  }
+
+                  // Check if there are any changes
+                  if (Object.keys(updates).length === 0) {
+                    console.log('ℹ️  No changes made to configuration');
+                    rl.close();
+                    return;
+                  }
+
+                  const success = configManager.updateConfig(oldName, updates);
+
+                  if (success) {
+                    console.log(
+                      `✅ Configuration "${updates.name || oldName}" updated successfully!`
+                    );
+                  }
+
+                  rl.close();
+                }
+              );
+            }
+          );
+        }
+      );
     });
   });
 }

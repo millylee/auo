@@ -324,15 +324,15 @@ export class ConfigManager {
           updates.description !== undefined ? updates.description : existingConfig.description,
         env: {
           ANTHROPIC_BASE_URL:
-            updates.env?.ANTHROPIC_BASE_URL !== undefined
+            updates.env && 'ANTHROPIC_BASE_URL' in updates.env
               ? updates.env.ANTHROPIC_BASE_URL
               : existingConfig.env.ANTHROPIC_BASE_URL,
           ANTHROPIC_AUTH_TOKEN:
-            updates.env?.ANTHROPIC_AUTH_TOKEN !== undefined
+            updates.env && 'ANTHROPIC_AUTH_TOKEN' in updates.env
               ? updates.env.ANTHROPIC_AUTH_TOKEN
               : existingConfig.env.ANTHROPIC_AUTH_TOKEN,
           ANTHROPIC_MODEL:
-            updates.env?.ANTHROPIC_MODEL !== undefined
+            updates.env && 'ANTHROPIC_MODEL' in updates.env
               ? updates.env.ANTHROPIC_MODEL
               : existingConfig.env.ANTHROPIC_MODEL,
         },

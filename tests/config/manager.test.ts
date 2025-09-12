@@ -323,4 +323,127 @@ describe('ConfigManager', () => {
       expect(currentConfig.name).toBe('default');
     });
   });
+
+  describe('updateConfig', () => {
+    it('should successfully update configuration', () => {
+      // Add a configuration to update
+      configManager.addConfig({
+        name: 'test-config',
+        env: {
+          ANTHROPIC_BASE_URL: 'https://api.test.com',
+          ANTHROPIC_AUTH_TOKEN: 'test-token',
+          ANTHROPIC_MODEL: 'claude-3-5-sonnet-20241022',
+        },
+        description: 'Test configuration',
+      });
+
+      // Update the configuration
+      const result = configManager.updateConfig('test-config', {
+        description: 'Updated test configuration',
+        env: {
+          ANTHROPIC_BASE_URL: 'https://api.updated.com',
+          ANTHROPIC_MODEL: 'claude-3-5-haiku-20241022',
+        },
+      });
+
+      expect(result).toBe(true);
+
+      const updatedConfig = configManager.getConfig('test-config');
+      expect(updatedConfig?.description).toBe('Updated test configuration');
+      expect(updatedConfig?.env.ANTHROPIC_BASE_URL).toBe('https://api.updated.com');
+      expect(updatedConfig?.env.ANTHROPIC_MODEL).toBe('claude-3-5-haiku-20241022');
+      expect(updatedConfig?.env.ANTHROPIC_AUTH_TOKEN).toBe('test-token'); // Should remain unchanged
+    });
+
+    it('should reject updating non-existent configuration', () => {
+      const result = configManager.updateConfig('non-existent', {
+        description: 'This should fail',
+      });
+
+      expect(result).toBe(false);
+    });
+
+    it('should reject name conflicts when renaming', () => {
+      // Add two configurations
+      configManager.addConfig({
+        name: 'first',
+        env: {
+          ANTHROPIC_AUTH_TOKEN: 'first-token',
+        },
+        description: 'First configuration',
+      });
+
+      configManager.addConfig({
+        name: 'second',
+        env: {
+          ANTHROPIC_AUTH_TOKEN: 'second-token',
+        },
+        description: 'Second configuration',
+      });
+
+      // Try to rename 'second' to 'first' (should fail due to conflict)
+      const result = configManager.updateConfig('second', {
+        name: 'first',
+      });
+
+      expect(result).toBe(false);
+
+      // Ensure 'second' still exists with original name
+      const secondConfig = configManager.getConfig('second');
+      expect(secondConfig?.name).toBe('second');
+    });
+
+    it('should allow partial updates', () => {
+      // Add a configuration
+      configManager.addConfig({
+        name: 'partial-test',
+        env: {
+          ANTHROPIC_BASE_URL: 'https://api.original.com',
+          ANTHROPIC_AUTH_TOKEN: 'original-token',
+          ANTHROPIC_MODEL: 'claude-3-5-sonnet-20241022',
+        },
+        description: 'Original description',
+      });
+
+      // Update only the model
+      const result = configManager.updateConfig('partial-test', {
+        env: {
+          ANTHROPIC_MODEL: 'claude-3-5-haiku-20241022',
+        },
+      });
+
+      expect(result).toBe(true);
+
+      const updatedConfig = configManager.getConfig('partial-test');
+      expect(updatedConfig?.env.ANTHROPIC_MODEL).toBe('claude-3-5-haiku-20241022');
+      expect(updatedConfig?.env.ANTHROPIC_BASE_URL).toBe('https://api.original.com'); // Should remain unchanged
+      expect(updatedConfig?.env.ANTHROPIC_AUTH_TOKEN).toBe('original-token'); // Should remain unchanged
+      expect(updatedConfig?.description).toBe('Original description'); // Should remain unchanged
+    });
+
+    it('should handle empty environment updates', () => {
+      // Add a configuration
+      configManager.addConfig({
+        name: 'empty-env-test',
+        env: {
+          ANTHROPIC_BASE_URL: 'https://api.test.com',
+          ANTHROPIC_AUTH_TOKEN: 'test-token',
+        },
+        description: 'Test configuration',
+      });
+
+      // Update with undefined values to clear them
+      const result = configManager.updateConfig('empty-env-test', {
+        env: {
+          ANTHROPIC_BASE_URL: undefined,
+        },
+      });
+
+      expect(result).toBe(true);
+
+      const updatedConfig = configManager.getConfig('empty-env-test');
+      expect(updatedConfig?.env.ANTHROPIC_BASE_URL).toBeUndefined();
+      expect(updatedConfig?.env.ANTHROPIC_AUTH_TOKEN).toBe('test-token'); // Should remain unchanged
+    });
+  });
 });

@@ -37,6 +37,8 @@ export interface CLIOptions {
   useIndex?: number;
   /** Remove configuration at specified index */
   removeIndex?: number;
+  /** Edit configuration at specified index */
+  editIndex?: number;
   /** List all configurations */
   listConfigs?: boolean;
   /** Show configuration file path */
