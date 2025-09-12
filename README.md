@@ -5,7 +5,14 @@
 [![npm version](https://badge.fury.io/js/auo.svg)](https://badge.fury.io/js/auo)
 [![License: BSD 2-Clause](https://img.shields.io/badge/License-BSD%202--Clause-blue.svg)](https://opensource.org/license/bsd-2-clause)
 
-让 Claude Code 更易用，支持多配置切换。
+让 Claude Code 更易用，支持多配置切换和环境变量管理。搭配 [Any Router](https://github.com/millylee/anyrouter-check-in) 等第三方中转站免费使用。
+
+**主要特性:**
+
+- 🔄 **多配置切换**: 轻松在不同API端点和认证之间切换
+- 🔧 **环境变量管理**: 支持 ANTHROPIC_BASE_URL、ANTHROPIC_AUTH_TOKEN、ANTHROPIC_MODEL
+- ⚡ **自动升级**: 配置格式自动升级，无需手动干预
+- 🛡️ **向后兼容**: 完全兼容旧版本配置格式
 
 ## 前置要求
 
@@ -34,13 +41,53 @@ auo --add
 # 查看配置文件路径
 auo --config-path
 
-# 正常使用 Claude，自动使用当前选中的配置中的 baseUrl 和 authToken
+# 正常使用 Claude，自动使用当前选中的配置中的所有环境变量设置
 auo "帮我写代码"
 ```
 
 ## 配置示例
 
-可以手动编辑配置文件 `~/.auo/config.json`，但不推荐。
+配置文件会自动从旧格式升级到新格式。手动编辑配置文件 `~/.auo/config.json` 不推荐，建议使用 `auo --add` 命令。模型别名参考官方链接 [model-aliases](https://docs.anthropic.com/en/docs/claude-code/model-config#model-aliases)，比如使用 `sonnet[1m]` 可以使用最新的百万上下文。
+
+**最新格式 (v2):**
+
+```json
+{
+  "version": "v2",
+  "providers": [
+    {
+      "name": "default",
+      "description": "官方 Anthropic API",
+      "env": {
+        "ANTHROPIC_BASE_URL": "",
+        "ANTHROPIC_AUTH_TOKEN": "your-anthropic-token",
+        "ANTHROPIC_MODEL": "default"
+      }
+    },
+    {
+      "name": "custom-proxy",
+      "description": "自定义代理服务器",
+      "env": {
+        "ANTHROPIC_BASE_URL": "https://your-proxy-server.com/v1",
+        "ANTHROPIC_AUTH_TOKEN": "your-proxy-token",
+        "ANTHROPIC_MODEL": "claude-3-5-sonnet-20241022"
+      }
+    },
+    {
+      "name": "local-dev",
+      "description": "本地开发环境",
+      "env": {
+        "ANTHROPIC_BASE_URL": "http://localhost:8000",
+        "ANTHROPIC_AUTH_TOKEN": "dev-token",
+        "ANTHROPIC_MODEL": "default"
+      }
+    }
+  ],
+  "currentIndex": 0
+}
+```
+
+**旧格式 (v1) - 自动升级:**
 
 ```json
 {
@@ -50,23 +97,13 @@ auo "帮我写代码"
       "baseUrl": "",
       "authToken": "your-anthropic-token",
       "description": "官方 Anthropic API"
-    },
-    {
-      "name": "custom-proxy",
-      "baseUrl": "https://your-proxy-server.com/v1",
-      "authToken": "your-proxy-token",
-      "description": "自定义代理服务器"
-    },
-    {
-      "name": "local-dev",
-      "baseUrl": "http://localhost:8000",
-      "authToken": "dev-token",
-      "description": "本地开发环境"
     }
   ],
   "currentIndex": 0
 }
 ```
+
+> **注意**: 旧格式配置会在首次使用时自动升级到新格式，无需手动操作。
 
 ## 开发指南
 
