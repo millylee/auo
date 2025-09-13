@@ -180,7 +180,7 @@ export class ConfigManager {
       const marker = isCurrent ? '👉' : '  ';
       const baseUrl = cfg.env.ANTHROPIC_BASE_URL || '(not set)';
       const authToken = cfg.env.ANTHROPIC_AUTH_TOKEN ? '✅' : '❌';
-      const model = cfg.env.ANTHROPIC_MODEL || 'default';
+      const model = cfg.env.ANTHROPIC_MODEL || 'not set';
       const description = cfg.description ? ` - ${cfg.description}` : '';
 
       console.log(`${marker} [${index}] ${cfg.name}${description}`);
@@ -224,7 +224,7 @@ export class ConfigManager {
           env: {
             ANTHROPIC_BASE_URL: params.env.ANTHROPIC_BASE_URL?.trim() || undefined,
             ANTHROPIC_AUTH_TOKEN: params.env.ANTHROPIC_AUTH_TOKEN.trim(),
-            ANTHROPIC_MODEL: params.env.ANTHROPIC_MODEL?.trim() || 'default',
+            ANTHROPIC_MODEL: params.env.ANTHROPIC_MODEL?.trim() || undefined,
           },
         };
       } else {
@@ -240,7 +240,7 @@ export class ConfigManager {
           env: {
             ANTHROPIC_BASE_URL: params.baseUrl?.trim() || undefined,
             ANTHROPIC_AUTH_TOKEN: params.authToken.trim(),
-            ANTHROPIC_MODEL: 'default',
+            ANTHROPIC_MODEL: undefined,
           },
         };
       }

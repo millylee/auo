@@ -134,7 +134,7 @@ export function handleConfigCommands(options: CLIOptions, configManager: ConfigM
       );
       console.log(`   Base URL: ${config.env.ANTHROPIC_BASE_URL || '(not set)'}`);
       console.log(`   Token: ${config.env.ANTHROPIC_AUTH_TOKEN ? 'set' : 'not set'}`);
-      console.log(`   Model: ${config.env.ANTHROPIC_MODEL || 'default'}`);
+      console.log(`   Model: ${config.env.ANTHROPIC_MODEL || 'not set'}`);
     } else {
       const allConfigs = configManager.getAllConfigs();
       console.error(
@@ -267,7 +267,7 @@ export function editConfigInteractive(configManager: ConfigManager, index: numbe
             `Auth Token (${currentConfig.env.ANTHROPIC_AUTH_TOKEN ? 'set' : 'not set'}): `,
             (authToken) => {
               rl.question(
-                `Model (${currentConfig.env.ANTHROPIC_MODEL || 'default'}): `,
+                `Model (${currentConfig.env.ANTHROPIC_MODEL || 'not set'}): `,
                 (model) => {
                   const oldName = currentConfig.name;
 
@@ -286,11 +286,13 @@ export function editConfigInteractive(configManager: ConfigManager, index: numbe
                   const envUpdates: Partial<typeof currentConfig.env> = {};
                   let hasEnvUpdates = false;
 
-                  if (baseUrl.trim() !== (currentConfig.env.ANTHROPIC_BASE_URL || '')) {
-                    envUpdates.ANTHROPIC_BASE_URL = baseUrl.trim() || undefined;
+                  // Only update if user actually provided input (not empty)
+                  if (baseUrl.trim()) {
+                    envUpdates.ANTHROPIC_BASE_URL = baseUrl.trim();
                     hasEnvUpdates = true;
                   }
 
+                  // Only update if user provided a new token (not empty)
                   if (
                     authToken.trim() &&
                     authToken.trim() !== currentConfig.env.ANTHROPIC_AUTH_TOKEN
@@ -299,8 +301,9 @@ export function editConfigInteractive(configManager: ConfigManager, index: numbe
                     hasEnvUpdates = true;
                   }
 
-                  if (model.trim() !== (currentConfig.env.ANTHROPIC_MODEL || 'default')) {
-                    envUpdates.ANTHROPIC_MODEL = model.trim() || 'default';
+                  // Only update if user provided input (not empty) and different from current value
+                  if (model.trim() && model.trim() !== (currentConfig.env.ANTHROPIC_MODEL || '')) {
+                    envUpdates.ANTHROPIC_MODEL = model.trim();
                     hasEnvUpdates = true;
                   }
 
@@ -373,7 +376,7 @@ export function showCurrentConfig(config: ConfigItemV2): void {
       `🔧 Current config: ${config.name}${config.description ? ` - ${config.description}` : ''}`
     );
 
-    const model = config.env.ANTHROPIC_MODEL || 'default';
+    const model = config.env.ANTHROPIC_MODEL || 'not set';
     console.log(`   Using model: ${model}`);
   }
 }

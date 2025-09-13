@@ -70,7 +70,7 @@ describe('ConfigMigration', () => {
       env: {
         ANTHROPIC_BASE_URL: 'https://api.anthropic.com',
         ANTHROPIC_AUTH_TOKEN: 'sk-official-123',
-        ANTHROPIC_MODEL: 'default',
+        ANTHROPIC_MODEL: undefined,
       },
     });
 
@@ -80,7 +80,7 @@ describe('ConfigMigration', () => {
       env: {
         ANTHROPIC_BASE_URL: 'https://proxy.example.com/v1',
         ANTHROPIC_AUTH_TOKEN: 'sk-proxy-456',
-        ANTHROPIC_MODEL: 'default',
+        ANTHROPIC_MODEL: undefined,
       },
     });
   });
@@ -102,7 +102,7 @@ describe('ConfigMigration', () => {
 
     expect(migratedConfig.providers[0].env.ANTHROPIC_BASE_URL).toBeUndefined();
     expect(migratedConfig.providers[0].env.ANTHROPIC_AUTH_TOKEN).toBe('sk-test-123');
-    expect(migratedConfig.providers[0].env.ANTHROPIC_MODEL).toBe('default');
+    expect(migratedConfig.providers[0].env.ANTHROPIC_MODEL).toBeUndefined();
   });
 
   test('should validate v2 config structure correctly', () => {

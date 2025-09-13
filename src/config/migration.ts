@@ -36,7 +36,7 @@ export class ConfigMigration {
       env: {
         ANTHROPIC_BASE_URL: provider.baseUrl || undefined,
         ANTHROPIC_AUTH_TOKEN: provider.authToken || undefined,
-        ANTHROPIC_MODEL: 'default', // Default value for migrated configurations
+        ANTHROPIC_MODEL: undefined, // Default value for migrated configurations
       },
     }));
 
@@ -88,7 +88,7 @@ export class ConfigMigration {
           env: {
             ANTHROPIC_BASE_URL: undefined,
             ANTHROPIC_AUTH_TOKEN: '',
-            ANTHROPIC_MODEL: 'default',
+            ANTHROPIC_MODEL: undefined,
           },
         },
       ],
