@@ -35,6 +35,10 @@ auo --use 1
 # 删除指定索引的配置
 auo --remove 2
 
+# 编辑指定索引的配置
+
+auo --edit 1
+
 # 添加新配置（交互式）
 auo --add
 
