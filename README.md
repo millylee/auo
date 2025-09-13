@@ -5,7 +5,7 @@
 [![npm version](https://badge.fury.io/js/auo.svg)](https://badge.fury.io/js/auo)
 [![License: BSD 2-Clause](https://img.shields.io/badge/License-BSD%202--Clause-blue.svg)](https://opensource.org/license/bsd-2-clause)
 
-让 Claude Code 更易用，支持多配置切换和环境变量管理。搭配 [Any Router](https://github.com/millylee/anyrouter-check-in) 等第三方中转站免费使用。
+让 Claude Code 更易用，支持多配置切换和环境变量管理。非常适合有多个类似 [Any Router](https://github.com/millylee/anyrouter-check-in) 中转站的场景，某账号有问题切成另一个账号后使用 `/resume` 继续对话。
 
 **主要特性:**
 
