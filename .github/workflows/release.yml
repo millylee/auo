@@ -9,44 +9,44 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: write
       packages: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
-          
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        
+
       - name: Run tests
         run: pnpm run test
-        
+
       - name: Build project
         run: pnpm run build
-        
+
       - name: Create Release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          name: Release ${{ github.ref }}
           draft: false
           prerelease: false
-          
+
       - name: Publish to npm
         run: pnpm publish --no-git-checks
         env:
