@@ -49,6 +49,24 @@ auo --config-path
 auo "帮我写代码"
 ```
 
+## 使用截图
+
+`auo` 自动带入环境变量并启动 Claude Code。
+
+![](https://github.com/user-attachments/assets/6eeef760-1537-4add-912f-49c2a999e0c7)
+
+`auo --help` 查看支持的命令。
+
+![](https://github.com/user-attachments/assets/9a868d5c-40c5-45a5-a3c8-6bd3c7217e72)
+
+`auo --list` 查看已配置的列表。
+
+![](https://github.com/user-attachments/assets/2ad62b8a-ee72-487c-8323-511e97922443)
+
+`auo --use 6` 选择对应的配置后会有提示。
+
+![](https://github.com/user-attachments/assets/f27f85be-b91a-4550-b2c3-5aae80003ed5)
+
 ## 配置示例
 
 配置文件会自动从旧格式升级到新格式。手动编辑配置文件 `~/.auo/config.json` 不推荐，建议使用 `auo --add` 命令。模型别名参考官方链接 [model-aliases](https://docs.anthropic.com/en/docs/claude-code/model-config#model-aliases)，比如使用 `sonnet[1m]` 可以使用最新的百万上下文。
